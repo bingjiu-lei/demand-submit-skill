@@ -12,7 +12,8 @@ param(
     [string]$BranchName = "",
     [switch]$NoPush,
     [switch]$AllowEmpty,
-    [switch]$StagedOnly
+    [switch]$StagedOnly,
+    [switch]$All
 )
 
 $ErrorActionPreference = "Stop"
@@ -92,6 +93,7 @@ Write-Host "Base: $Remote/$BaseBranch"
 Write-Host "Target branch: $targetBranch"
 Write-Host "Commit message: $commitMessage"
 Write-Host "Staged only: $StagedOnly"
+Write-Host "Submit all: $All"
 
 $existingUnmerged = @(Git-Output @("diff", "--name-only", "--diff-filter=U"))
 if ($existingUnmerged.Count -gt 0) {
@@ -99,8 +101,28 @@ if ($existingUnmerged.Count -gt 0) {
 }
 
 $originalStaged = @(Git-Output @("diff", "--cached", "--name-only"))
+if ($StagedOnly -and $All) {
+    throw "Use either -StagedOnly or -All, not both."
+}
+
 if ($StagedOnly -and $originalStaged.Count -eq 0 -and -not $AllowEmpty) {
     throw "StagedOnly was set, but there are no staged files. Put files in IDEA/WebStorm Staged first or remove -StagedOnly."
+}
+
+$originalUnstaged = @(Git-Output @("diff", "--name-only"))
+$originalUntracked = @(Git-Output @("ls-files", "--others", "--exclude-standard"))
+$hasMixedSelection = $originalStaged.Count -gt 0 -and (($originalUnstaged.Count + $originalUntracked.Count) -gt 0)
+if ($hasMixedSelection -and -not $StagedOnly -and -not $All) {
+    Write-Host ""
+    Write-Host "Detected both staged and unstaged/untracked changes."
+    Write-Host "Staged files:"
+    $originalStaged | ForEach-Object { Write-Host "  $_" }
+    Write-Host ""
+    Write-Host "This usually means IDEA/WebStorm Staged is being used for a partial submit."
+    Write-Host "Rerun with one explicit mode:"
+    Write-Host "  -StagedOnly   submit only files currently in Staged"
+    Write-Host "  -All          submit every local change with git add -A"
+    throw "Refusing to guess between staged-only and all-files submit."
 }
 
 $stamp = Get-Date -Format "yyyyMMdd-HHmmss"
@@ -148,7 +170,11 @@ try {
             Write-Host "Conflict or restore failure occurred during stash pop."
             Write-Host "The repository has been left for manual/AI conflict resolution."
             Write-Host "After resolving, run:"
-            Write-Host "  git add -A"
+            if ($StagedOnly) {
+                Write-Host "  git add -- <files from $stagedPathFile>"
+            } else {
+                Write-Host "  git add -A"
+            }
             Write-Host "  git commit -m `"$commitMessage`""
             Write-Host "  git push -u $Remote $targetBranch"
             exit 2
@@ -173,6 +199,9 @@ try {
             Run-Git @("add", "--", $path)
         }
     } else {
+        if (-not $All -and $originalStaged.Count -gt 0) {
+            Write-Host "No unstaged/untracked changes were detected at start; submitting the existing staged selection."
+        }
         Run-Git @("add", "-A")
     }
     $staged = @(Git-Output @("diff", "--cached", "--name-only"))

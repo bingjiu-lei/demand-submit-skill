@@ -56,6 +56,27 @@ powershell -NoProfile -ExecutionPolicy Bypass -File .\install.ps1
 
 Codex 会根据 Skill 自动调用脚本，不需要你每次手动找脚本路径。
 
+## 给 AI 工具的终端提醒
+
+Windows 上默认按 PowerShell 处理命令，不要把 Bash、CMD、PowerShell 的语法混用。
+
+PowerShell 里应该这样写：
+
+```powershell
+Set-Location -LiteralPath "D:\gitProgram\your-repo"
+git status --short --branch
+```
+
+不要在 PowerShell 里用这些写法：
+
+```text
+cd repo && git status
+cd /d D:\repo & git status
+timeout /t 30 /nobreak >nul
+```
+
+如果 AI 工具有 `workdir` / 工作目录参数，优先直接把工作目录设成仓库路径，再单独执行 Git 命令。
+
 ## IDEA / WebStorm 只提交部分文件
 
 如果你只想提交某些文件，不想把本地端口配置、IDE 文件、运行服务生成文件一起提交，推荐使用 IDEA / WebStorm 的 `Staged` 区。
@@ -85,6 +106,18 @@ powershell -NoProfile -ExecutionPolicy Bypass -File "<clone-path>\scripts\demand
 
 注意：`-StagedOnly` 是按“文件”处理，不是按“代码块/hunk”处理。如果同一个文件里既有已暂存改动，又有未暂存改动，脚本恢复后会重新暂存这个文件的当前完整改动。建议在 IDEA / WebStorm 里先把要提交的文件整理成“这个文件可以整体提交”的状态。
 
+为了防止 AI 忘记加 `-StagedOnly`，脚本现在有一个强制保护：
+
+```text
+如果同时存在 Staged 文件和 Unstaged / Untracked 文件，
+并且命令里既没有 -StagedOnly，也没有 -All，
+脚本会直接停止，不会自动提交。
+```
+
+这种情况通常表示你已经在 IDEA / WebStorm 里选择了本次要提交的文件，所以 AI 应该使用 `-StagedOnly`。只有你明确说“提交全部本地改动”时，才应该使用 `-All`。
+
+对 AI 工具的要求是：看到这种混合状态时，不要再问用户“提交暂存区还是提交全部”。直接按 IDEA / WebStorm 的 Staged 选择执行 `-StagedOnly`。用户明确说“全部提交”“提交所有本地改动”时，才使用 `-All`。
+
 可以用下面的命令确认哪些文件会被提交：
 
 ```powershell
@@ -96,7 +129,13 @@ git diff --cached --name-only
 如果是 CatPaw、Trae 或其他能执行本地命令的 AI 工具，可以让它执行：
 
 ```powershell
-powershell -NoProfile -ExecutionPolicy Bypass -File "<clone-path>\scripts\demand-submit.ps1" 197462 "需求标题"
+powershell -NoProfile -ExecutionPolicy Bypass -File "<clone-path>\scripts\demand-submit.ps1" 197462 "需求标题" -All
+```
+
+如果你已经在 IDEA / WebStorm 里把文件放进 `Staged`，让它执行：
+
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File "<clone-path>\scripts\demand-submit.ps1" 197462 "需求标题" -StagedOnly
 ```
 
 如果脚本遇到冲突并停止，可以继续让 AI：
@@ -118,8 +157,9 @@ powershell -NoProfile -ExecutionPolicy Bypass -File "<clone-path>\scripts\demand
 6. 恢复刚才 stash 的改动。
 7. 如果发生冲突，立即停止，不 commit、不 push。
 8. 如果没有冲突：
-   - 默认模式会执行 `git add -A`，提交全部改动；
+   - `-All` 模式会执行 `git add -A`，提交全部改动；
    - `-StagedOnly` 模式只提交脚本运行前已经暂存的文件。
+   - 如果脚本发现同时存在 `Staged` 和 `Unstaged / Untracked`，但命令里没有显式传 `-StagedOnly` 或 `-All`，它会停止，防止 AI 误提交全部文件。
 
 ## 冲突和拉取失败时怎么办
 
@@ -156,13 +196,13 @@ git log --oneline <baseBranch>..origin/<baseBranch>
 默认分支名就是需求号：
 
 ```powershell
-powershell -NoProfile -ExecutionPolicy Bypass -File "<clone-path>\scripts\demand-submit.ps1" 197462 "需求标题"
+powershell -NoProfile -ExecutionPolicy Bypass -File "<clone-path>\scripts\demand-submit.ps1" 197462 "需求标题" -All
 ```
 
 指定基线分支，例如基于 `release-1.44`：
 
 ```powershell
-powershell -NoProfile -ExecutionPolicy Bypass -File "<clone-path>\scripts\demand-submit.ps1" 197462 "需求标题" -BaseBranch release-1.44
+powershell -NoProfile -ExecutionPolicy Bypass -File "<clone-path>\scripts\demand-submit.ps1" 197462 "需求标题" -BaseBranch release-1.44 -All
 ```
 
 只提交 IDEA / WebStorm Staged 里的文件：
@@ -174,19 +214,19 @@ powershell -NoProfile -ExecutionPolicy Bypass -File "<clone-path>\scripts\demand
 给需求分支加前缀：
 
 ```powershell
-powershell -NoProfile -ExecutionPolicy Bypass -File "<clone-path>\scripts\demand-submit.ps1" 197462 "需求标题" -BranchPrefix "feature/"
+powershell -NoProfile -ExecutionPolicy Bypass -File "<clone-path>\scripts\demand-submit.ps1" 197462 "需求标题" -BranchPrefix "feature/" -All
 ```
 
 指定完整分支名：
 
 ```powershell
-powershell -NoProfile -ExecutionPolicy Bypass -File "<clone-path>\scripts\demand-submit.ps1" 197462 "需求标题" -BranchName "197462-1.44"
+powershell -NoProfile -ExecutionPolicy Bypass -File "<clone-path>\scripts\demand-submit.ps1" 197462 "需求标题" -BranchName "197462-1.44" -All
 ```
 
 只 commit，不 push：
 
 ```powershell
-powershell -NoProfile -ExecutionPolicy Bypass -File "<clone-path>\scripts\demand-submit.ps1" 197462 "需求标题" -NoPush
+powershell -NoProfile -ExecutionPolicy Bypass -File "<clone-path>\scripts\demand-submit.ps1" 197462 "需求标题" -NoPush -All
 ```
 
 ## 安全策略
@@ -196,6 +236,7 @@ powershell -NoProfile -ExecutionPolicy Bypass -File "<clone-path>\scripts\demand
 - 遇到冲突会停止，不会推送冲突代码。
 - `git pull --ff-only` 失败时不会自动 merge 或 reset。
 - `-StagedOnly` 模式不会提交未暂存文件。
+- 如果同时存在已暂存和未暂存/未跟踪文件，AI 应该直接使用 `-StagedOnly`，不要反复询问；只有用户明确要求提交全部时才使用 `-All`。
 - 不会复用本地或远程旧需求分支，会从最新 `origin/<baseBranch>` 创建干净分支。
 - 执行前会生成 patch 备份。
 - 拉取基础分支时使用 `git pull --ff-only`，避免自动 merge。
