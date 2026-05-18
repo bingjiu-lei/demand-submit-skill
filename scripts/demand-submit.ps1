@@ -11,7 +11,8 @@ param(
     [string]$BranchPrefix = "",
     [string]$BranchName = "",
     [switch]$NoPush,
-    [switch]$AllowEmpty
+    [switch]$AllowEmpty,
+    [switch]$StagedOnly
 )
 
 $ErrorActionPreference = "Stop"
@@ -52,6 +53,21 @@ function Write-Section {
     Write-Host "== $Text =="
 }
 
+function Rename-LocalBranchIfExists {
+    param(
+        [string]$Branch,
+        [string]$Stamp
+    )
+    $localRef = "refs/heads/$Branch"
+    if (-not (Has-Ref $localRef)) {
+        return
+    }
+
+    $backupBranch = "$Branch-backup-$Stamp"
+    Write-Host "Local target branch already exists. Renaming it to: $backupBranch"
+    Run-Git @("branch", "-m", $Branch, $backupBranch)
+}
+
 $repoRoot = (Git-Output @("rev-parse", "--show-toplevel") | Select-Object -First 1)
 Set-Location -LiteralPath $repoRoot
 
@@ -75,15 +91,22 @@ Write-Host "Root: $repoRoot"
 Write-Host "Base: $Remote/$BaseBranch"
 Write-Host "Target branch: $targetBranch"
 Write-Host "Commit message: $commitMessage"
+Write-Host "Staged only: $StagedOnly"
 
 $existingUnmerged = @(Git-Output @("diff", "--name-only", "--diff-filter=U"))
 if ($existingUnmerged.Count -gt 0) {
     throw "Repository already has unresolved conflicts. Resolve them before running demand-submit."
 }
 
+$originalStaged = @(Git-Output @("diff", "--cached", "--name-only"))
+if ($StagedOnly -and $originalStaged.Count -eq 0 -and -not $AllowEmpty) {
+    throw "StagedOnly was set, but there are no staged files. Put files in IDEA/WebStorm Staged first or remove -StagedOnly."
+}
+
 $stamp = Get-Date -Format "yyyyMMdd-HHmmss"
 $backupRoot = Join-Path $env:USERPROFILE ".codex\demand-submit-backups"
 $backupDir = Join-Path $backupRoot "$stamp-$($targetBranch -replace '[\\/:*?""<>|]', '_')"
+$stagedPathFile = Join-Path $backupDir "staged-files.txt"
 New-Item -ItemType Directory -Force -Path $backupDir | Out-Null
 
 Write-Section "Backup"
@@ -91,6 +114,7 @@ Git-Output @("branch", "--show-current") | Set-Content -LiteralPath (Join-Path $
 Git-Output @("status", "--short") | Set-Content -LiteralPath (Join-Path $backupDir "status.txt") -Encoding UTF8
 Git-Output @("diff", "--binary") | Set-Content -LiteralPath (Join-Path $backupDir "working-tree.patch") -Encoding UTF8
 Git-Output @("diff", "--cached", "--binary") | Set-Content -LiteralPath (Join-Path $backupDir "staged.patch") -Encoding UTF8
+$originalStaged | Set-Content -LiteralPath $stagedPathFile -Encoding UTF8
 Write-Host "Backup written to: $backupDir"
 
 $statusBefore = @(Git-Output @("status", "--porcelain"))
@@ -113,15 +137,8 @@ try {
     Run-Git @("pull", "--ff-only", $Remote, $BaseBranch)
 
     Write-Section "Checkout Target Branch"
-    $localRef = "refs/heads/$targetBranch"
-    $remoteRef = "refs/remotes/$Remote/$targetBranch"
-    if (Has-Ref $localRef) {
-        Run-Git @("checkout", $targetBranch)
-    } elseif (Has-Ref $remoteRef) {
-        Run-Git @("checkout", "-b", $targetBranch, "--track", "$Remote/$targetBranch")
-    } else {
-        Run-Git @("checkout", "-b", $targetBranch, "$Remote/$BaseBranch")
-    }
+    Rename-LocalBranchIfExists -Branch $targetBranch -Stamp $stamp
+    Run-Git @("checkout", "-b", $targetBranch, "$Remote/$BaseBranch")
 
     if ($createdStash) {
         Write-Section "Restore Work"
@@ -146,7 +163,18 @@ try {
     }
 
     Write-Section "Commit"
-    Run-Git @("add", "-A")
+    if ($StagedOnly) {
+        Write-Host "Restaging files that were staged before running demand-submit:"
+        foreach ($path in $originalStaged) {
+            if ([string]::IsNullOrWhiteSpace($path)) {
+                continue
+            }
+            Write-Host "  $path"
+            Run-Git @("add", "--", $path)
+        }
+    } else {
+        Run-Git @("add", "-A")
+    }
     $staged = @(Git-Output @("diff", "--cached", "--name-only"))
     if ($staged.Count -eq 0 -and -not $AllowEmpty) {
         Write-Host "No staged changes after moving to target branch. Nothing to commit."
