@@ -30,9 +30,21 @@
 
 ### 方式一：双击安装
 
-下载或保存 `install.bat` 后双击运行。
+从 GitHub Releases 或 Gitee Releases 下载 `demand-submit-install.bat`，双击运行即可。
 
-`install.bat` 会优先拉取：
+`demand-submit-install.bat` 只是安装入口。它会自动拉取完整项目，并把 skill 安装到：
+
+```text
+%USERPROFILE%\.codex\skills\demand-submit
+```
+
+安装完成后，这个已安装的 skill 目录里会带一个卸载入口：
+
+```text
+%USERPROFILE%\.codex\skills\demand-submit\demand-submit-uninstall.bat
+```
+
+`demand-submit-install.bat` 会优先拉取：
 
 ```text
 https://gitee.com/bingjiu-lei/demand-submit-skill/raw/main/bootstrap.ps1
@@ -47,13 +59,13 @@ https://raw.githubusercontent.com/bingjiu-lei/demand-submit-skill/main/bootstrap
 ### 方式二：PowerShell 一行安装
 
 ```powershell
-irm https://gitee.com/bingjiu-lei/demand-submit-skill/raw/main/bootstrap.ps1 | iex
+$bootstrap = Join-Path $env:TEMP "demand-submit-bootstrap.ps1"; iwr https://gitee.com/bingjiu-lei/demand-submit-skill/raw/main/bootstrap.ps1 -OutFile $bootstrap; powershell -NoProfile -ExecutionPolicy Bypass -File $bootstrap
 ```
 
 如果 Gitee 不可用，可以使用 GitHub：
 
 ```powershell
-irm https://raw.githubusercontent.com/bingjiu-lei/demand-submit-skill/main/bootstrap.ps1 | iex
+$bootstrap = Join-Path $env:TEMP "demand-submit-bootstrap.ps1"; iwr https://raw.githubusercontent.com/bingjiu-lei/demand-submit-skill/main/bootstrap.ps1 -OutFile $bootstrap; powershell -NoProfile -ExecutionPolicy Bypass -File $bootstrap
 ```
 
 ### 方式三：手动安装
@@ -82,7 +94,21 @@ powershell -NoProfile -ExecutionPolicy Bypass -File .\install.ps1
 
 ## 卸载
 
-推荐用完整路径执行卸载脚本，不要站在项目目录里卸载项目本身：
+推荐直接打开已安装的 skill 目录：
+
+```text
+%USERPROFILE%\.codex\skills\demand-submit
+```
+
+然后双击：
+
+```text
+demand-submit-uninstall.bat
+```
+
+它会调用 clone 项目里的 `uninstall.ps1`，删除已安装的 skill。卸载时会询问是否同时删除 clone 下来的项目目录，默认会删除；脚本自动生成的提交保护记录会单独询问，默认不删除。
+
+也可以手动用完整路径执行卸载脚本：
 
 ```powershell
 powershell -NoProfile -ExecutionPolicy Bypass -File "<clone-path>\uninstall.ps1"

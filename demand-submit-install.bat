@@ -6,8 +6,9 @@ set "GITHUB_BOOTSTRAP=https://raw.githubusercontent.com/bingjiu-lei/demand-submi
 
 powershell -NoProfile -ExecutionPolicy Bypass -Command ^
   "$ErrorActionPreference='Stop';" ^
-  "try { $script = Invoke-RestMethod '%GITEE_BOOTSTRAP%' } catch { Write-Host 'Gitee bootstrap failed, falling back to GitHub...'; $script = Invoke-RestMethod '%GITHUB_BOOTSTRAP%' }" ^
-  "Invoke-Expression $script"
+  "$bootstrap = Join-Path $env:TEMP 'demand-submit-bootstrap.ps1';" ^
+  "try { Invoke-WebRequest '%GITEE_BOOTSTRAP%' -OutFile $bootstrap } catch { Write-Host 'Gitee bootstrap failed, falling back to GitHub...'; Invoke-WebRequest '%GITHUB_BOOTSTRAP%' -OutFile $bootstrap };" ^
+  "& powershell -NoProfile -ExecutionPolicy Bypass -File $bootstrap"
 
 if errorlevel 1 (
   echo.
