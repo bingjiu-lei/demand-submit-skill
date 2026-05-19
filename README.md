@@ -30,7 +30,7 @@
 
 ### 方式一：双击安装
 
-从 GitHub Releases 或 Gitee Releases 下载 `demand-submit-install.bat`，双击运行即可。
+从 GitHub Releases 或 Gitee Releases 下载 `demand-submit-install.bat`，双击运行即可。Release 里也会提供 `demand-submit-uninstall.bat`，后续卸载时使用。
 
 `demand-submit-install.bat` 只是安装入口。它会自动拉取完整项目，并把 skill 安装到：
 
@@ -94,16 +94,18 @@ powershell -NoProfile -ExecutionPolicy Bypass -File .\install.ps1
 
 ## 卸载
 
-推荐直接打开已安装的 skill 目录：
-
-```text
-%USERPROFILE%\.codex\skills\demand-submit
-```
-
-然后双击：
+推荐使用 Release 里下载的卸载入口，或 clone 项目根目录里的同名文件：
 
 ```text
 demand-submit-uninstall.bat
+```
+
+双击后会用中文提示你是否删除 clone 下来的项目目录、是否删除脚本自动生成的提交保护记录。
+
+安装时也会在已安装的 skill 目录里复制一份备用卸载入口：
+
+```text
+%USERPROFILE%\.codex\skills\demand-submit\demand-submit-uninstall.bat
 ```
 
 它会调用 clone 项目里的 `uninstall.ps1`，删除已安装的 skill。卸载时会询问是否同时删除 clone 下来的项目目录，默认会删除；脚本自动生成的提交保护记录会单独询问，默认不删除。
