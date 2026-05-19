@@ -6,7 +6,7 @@
 $ErrorActionPreference = "Stop"
 [Console]::OutputEncoding = [System.Text.Encoding]::UTF8
 
-$giteeRepo = "https://gitee.com/thundercloudly/demand-submit-skill.git"
+$giteeRepo = "https://gitee.com/bingjiu-lei/demand-submit-skill.git"
 $githubRepo = "https://github.com/bingjiu-lei/demand-submit-skill.git"
 
 function Show-Info {
@@ -111,4 +111,5 @@ try {
     Show-Info "安装失败：$($_.Exception.Message)" "demand-submit installer failed"
     exit 1
 }
+
 

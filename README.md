@@ -35,7 +35,7 @@
 `install.bat` 会优先拉取：
 
 ```text
-https://gitee.com/thundercloudly/demand-submit-skill/raw/main/bootstrap.ps1
+https://gitee.com/bingjiu-lei/demand-submit-skill/raw/main/bootstrap.ps1
 ```
 
 如果 Gitee 不可用，会自动切换到：
@@ -47,7 +47,7 @@ https://raw.githubusercontent.com/bingjiu-lei/demand-submit-skill/main/bootstrap
 ### 方式二：PowerShell 一行安装
 
 ```powershell
-irm https://gitee.com/thundercloudly/demand-submit-skill/raw/main/bootstrap.ps1 | iex
+irm https://gitee.com/bingjiu-lei/demand-submit-skill/raw/main/bootstrap.ps1 | iex
 ```
 
 如果 Gitee 不可用，可以使用 GitHub：
@@ -299,4 +299,5 @@ powershell -NoProfile -ExecutionPolicy Bypass -File "<clone-path>\scripts\demand
 - 执行前会生成 patch 备份。
 - 拉取基础分支时使用 `git pull --ff-only`，避免自动 merge。
 - 建议同一时间只让一个工具执行 Git 操作，避免 IDEA、Codex、CatPaw 同时切分支。
+
 
