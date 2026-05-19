@@ -26,6 +26,38 @@
 
 ## 安装
 
+推荐使用引导安装。它会弹窗选择安装目录，优先从 Gitee 拉取项目，失败时自动切换到 GitHub，然后安装到 `.codex\skills`。
+
+### 方式一：双击安装
+
+下载或保存 `install.bat` 后双击运行。
+
+`install.bat` 会优先拉取：
+
+```text
+https://gitee.com/bingjiu-lei/demand-submit-skill/raw/main/bootstrap.ps1
+```
+
+如果 Gitee 不可用，会自动切换到：
+
+```text
+https://raw.githubusercontent.com/bingjiu-lei/demand-submit-skill/main/bootstrap.ps1
+```
+
+### 方式二：PowerShell 一行安装
+
+```powershell
+irm https://gitee.com/bingjiu-lei/demand-submit-skill/raw/main/bootstrap.ps1 | iex
+```
+
+如果 Gitee 不可用，可以使用 GitHub：
+
+```powershell
+irm https://raw.githubusercontent.com/bingjiu-lei/demand-submit-skill/main/bootstrap.ps1 | iex
+```
+
+### 方式三：手动安装
+
 先 clone 这个仓库，然后在仓库根目录执行：
 
 ```powershell
