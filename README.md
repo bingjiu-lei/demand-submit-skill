@@ -46,6 +46,30 @@ powershell -NoProfile -ExecutionPolicy Bypass -File .\install.ps1
 
 安装时会自动把 Skill 里的脚本路径替换成你本机的真实 clone 路径，所以这个项目可以放在任意目录。
 
+## 卸载
+
+推荐用完整路径执行卸载脚本，不要站在项目目录里卸载项目本身：
+
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File "<clone-path>\uninstall.ps1"
+```
+
+默认只删除安装到 Codex 目录里的 skill，不会删除你 clone 下来的 `demand-submit-skill` 项目。
+
+如果想连 clone 下来的项目目录一起删除，加 `-RemoveProject`：
+
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File "<clone-path>\uninstall.ps1" -RemoveProject
+```
+
+如果也想删除脚本自动生成的提交保护记录，可以加 `-RemoveBackups`：
+
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File "<clone-path>\uninstall.ps1" -RemoveProject -RemoveBackups
+```
+
+如果编辑器或终端还打开在项目目录里，Windows 可能会暂时删不干净；关闭占用后重新执行即可。
+
 ## 在 Codex 中使用
 
 安装后，新开一个 Codex 会话，然后直接说：

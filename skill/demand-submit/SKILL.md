@@ -11,6 +11,8 @@ Run the standalone script:
 powershell -NoProfile -ExecutionPolicy Bypass -File "{{DEMAND_SUBMIT_SCRIPT_PATH}}" <demandId> "<title>" <mode>
 ```
 
+Uninstall the installed skill shell with the project root `uninstall.ps1`; add `-RemoveProject` only when the user explicitly wants to delete the cloned project directory too.
+
 Commit message is always:
 
 ```text
