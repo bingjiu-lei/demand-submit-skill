@@ -38,6 +38,8 @@ powershell -NoProfile -ExecutionPolicy Bypass -File .\install.ps1
 %USERPROFILE%\.codex\skills\demand-submit
 ```
 
+不要求必须安装 Codex。安装脚本只是写入用户目录下的 `.codex\skills`；只要你的 AI 工具支持扫描 `.codex\skills`，就可以加载这个 skill。
+
 真正执行 Git 流程的脚本仍然留在当前项目里：
 
 ```text

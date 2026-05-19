@@ -31,6 +31,9 @@ $content = $content.Replace("{{DEMAND_SUBMIT_SCRIPT_PATH}}", $scriptPath)
 Set-Content -LiteralPath $installedSkill -Value $content -Encoding UTF8
 
 Write-Host "Installed demand-submit skill to: $skillTarget"
+Write-Host "Codex does not need to be installed; this only writes files under:"
+Write-Host "  $CodexHome\skills"
+Write-Host "Any AI tool that scans .codex\skills can load it."
 Write-Host "Configured script path:"
 Write-Host "  $scriptPath"
 Write-Host "Ask an AI agent:"
