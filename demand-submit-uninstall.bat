@@ -48,7 +48,6 @@ echo.
 >> "%UNINSTALL_PS%" echo try {
 >> "%UNINSTALL_PS%" echo   Remove-Item -LiteralPath $repoRoot -Recurse -Force -ErrorAction Stop
 >> "%UNINSTALL_PS%" echo   Write-Host 'Uninstall finished.'
->> "%UNINSTALL_PS%" echo   Start-Process explorer.exe $parentRoot
 >> "%UNINSTALL_PS%" echo } catch {
 >> "%UNINSTALL_PS%" echo   Write-Host ('Project directory removal failed: ' + $_.Exception.Message^)
 >> "%UNINSTALL_PS%" echo   Write-Host 'Close editors or terminals opened inside the project directory, then delete it manually.'
