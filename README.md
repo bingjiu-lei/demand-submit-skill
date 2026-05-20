@@ -35,14 +35,14 @@
 例如：
 
 ```text
-demand-submit-install-v0.1.1.bat
+demand-submit-install-v0.1.2.bat
 ```
 
-Release 里的安装脚本会锁定对应版本：下载 `v0.1.1` 的安装脚本，就会安装 `v0.1.1` 的项目代码。
+Release 里的安装脚本会锁定对应版本：下载 `v0.1.2` 的安装脚本，就会安装 `v0.1.2` 的项目代码。
 
 仓库根目录里的 `demand-submit-current-install.bat` 用于安装当前最新版，适合自己调试或始终想跟随最新代码的人使用。
 
-已经发布过的旧 Release 如果曾经上传过旧安装脚本，建议重新上传对应的版本安装脚本，例如 `demand-submit-install-v0.1.0.bat`、`demand-submit-install-v0.1.1.bat`。否则旧安装脚本可能仍然会跟随 `main` 安装最新版。
+固定版本安装脚本作为 Release 附件保存，不需要长期提交在 `main` 分支里。需要发布新版本时，用下面的发布脚本生成对应版本的 bat，再上传到对应 Release。
 
 安装脚本只是安装入口。它会自动拉取完整项目，并把 skill 安装到：
 
