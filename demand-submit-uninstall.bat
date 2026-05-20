@@ -17,7 +17,19 @@ echo.
 >> "%UNINSTALL_PS%" echo [Console]::OutputEncoding = [System.Text.Encoding]::UTF8
 >> "%UNINSTALL_PS%" echo Start-Sleep -Seconds 1
 >> "%UNINSTALL_PS%" echo $repoRoot = (Resolve-Path $env:DEMAND_SUBMIT_REPO_ROOT^).Path.TrimEnd('\')
+>> "%UNINSTALL_PS%" echo $parentRoot = Split-Path -Parent $repoRoot
 >> "%UNINSTALL_PS%" echo $codexHome = Join-Path $env:USERPROFILE '.codex'
+>> "%UNINSTALL_PS%" echo try {
+>> "%UNINSTALL_PS%" echo   $shell = New-Object -ComObject Shell.Application
+>> "%UNINSTALL_PS%" echo   foreach ($window in @($shell.Windows(^)^)^) {
+>> "%UNINSTALL_PS%" echo     try {
+>> "%UNINSTALL_PS%" echo       $path = ([Uri]$window.LocationURL^).LocalPath
+>> "%UNINSTALL_PS%" echo       if ($path -and $path.TrimEnd('\') -ieq $repoRoot^) {
+>> "%UNINSTALL_PS%" echo         $window.Navigate2($parentRoot^)
+>> "%UNINSTALL_PS%" echo       }
+>> "%UNINSTALL_PS%" echo     } catch { }
+>> "%UNINSTALL_PS%" echo   }
+>> "%UNINSTALL_PS%" echo } catch { }
 >> "%UNINSTALL_PS%" echo $paths = @(
 >> "%UNINSTALL_PS%" echo   (Join-Path $codexHome 'skills\demand-submit'^),
 >> "%UNINSTALL_PS%" echo   (Join-Path $codexHome 'skills\demand-git'^),
@@ -36,6 +48,7 @@ echo.
 >> "%UNINSTALL_PS%" echo try {
 >> "%UNINSTALL_PS%" echo   Remove-Item -LiteralPath $repoRoot -Recurse -Force -ErrorAction Stop
 >> "%UNINSTALL_PS%" echo   Write-Host 'Uninstall finished.'
+>> "%UNINSTALL_PS%" echo   Start-Process explorer.exe $parentRoot
 >> "%UNINSTALL_PS%" echo } catch {
 >> "%UNINSTALL_PS%" echo   Write-Host ('Project directory removal failed: ' + $_.Exception.Message^)
 >> "%UNINSTALL_PS%" echo   Write-Host 'Close editors or terminals opened inside the project directory, then delete it manually.'
