@@ -3,3 +3,5 @@
 *.log
 *.tmp
 *.bak
+demand-submit-logs/
+release-installers/

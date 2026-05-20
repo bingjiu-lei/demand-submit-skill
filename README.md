@@ -28,61 +28,29 @@
 
 推荐使用引导安装。它会弹窗选择安装目录，优先从 Gitee 拉取项目，失败时自动切换到 GitHub，然后安装到 `.codex\skills`。
 
-### 方式一：双击安装
+### Release 双击安装
 
-从 GitHub Releases 或 Gitee Releases 下载 `demand-submit-install.bat`，双击运行即可。Release 里也会提供 `demand-submit-uninstall.bat`，后续卸载时使用。
+从 GitHub Releases 或 Gitee Releases 下载对应版本的安装脚本，双击运行即可。
 
-`demand-submit-install.bat` 只是安装入口。它会自动拉取完整项目，并把 skill 安装到：
+例如：
+
+```text
+demand-submit-install-v0.1.1.bat
+```
+
+Release 里的安装脚本会锁定对应版本：下载 `v0.1.1` 的安装脚本，就会安装 `v0.1.1` 的项目代码。
+
+仓库根目录里的 `demand-submit-current-install.bat` 用于安装当前最新版，适合自己调试或始终想跟随最新代码的人使用。
+
+已经发布过的旧 Release 如果曾经上传过旧安装脚本，建议重新上传对应的版本安装脚本，例如 `demand-submit-install-v0.1.0.bat`、`demand-submit-install-v0.1.1.bat`。否则旧安装脚本可能仍然会跟随 `main` 安装最新版。
+
+安装脚本只是安装入口。它会自动拉取完整项目，并把 skill 安装到：
 
 ```text
 %USERPROFILE%\.codex\skills\demand-submit
 ```
 
-安装完成后，这个已安装的 skill 目录里会带一个卸载入口：
-
-```text
-%USERPROFILE%\.codex\skills\demand-submit\demand-submit-uninstall.bat
-```
-
-`demand-submit-install.bat` 会优先拉取：
-
-```text
-https://gitee.com/bingjiu-lei/demand-submit-skill/raw/main/bootstrap.ps1
-```
-
-如果 Gitee 不可用，会自动切换到：
-
-```text
-https://raw.githubusercontent.com/bingjiu-lei/demand-submit-skill/main/bootstrap.ps1
-```
-
-### 方式二：PowerShell 一行安装
-
-```powershell
-$bootstrap = Join-Path $env:TEMP "demand-submit-bootstrap.ps1"; iwr https://gitee.com/bingjiu-lei/demand-submit-skill/raw/main/bootstrap.ps1 -OutFile $bootstrap; powershell -NoProfile -ExecutionPolicy Bypass -File $bootstrap
-```
-
-如果 Gitee 不可用，可以使用 GitHub：
-
-```powershell
-$bootstrap = Join-Path $env:TEMP "demand-submit-bootstrap.ps1"; iwr https://raw.githubusercontent.com/bingjiu-lei/demand-submit-skill/main/bootstrap.ps1 -OutFile $bootstrap; powershell -NoProfile -ExecutionPolicy Bypass -File $bootstrap
-```
-
-### 方式三：手动安装
-
-先 clone 这个仓库，然后在仓库根目录执行：
-
-```powershell
-powershell -NoProfile -ExecutionPolicy Bypass -File .\install.ps1
-```
-
-安装器只会把 Codex Skill 复制到：
-
-```text
-%USERPROFILE%\.codex\skills\demand-submit
-```
-
-不要求必须安装 Codex。安装脚本只是写入用户目录下的 `.codex\skills`；只要你的 AI 工具支持扫描 `.codex\skills`，就可以加载这个 skill。
+不要求必须安装 Codex。安装入口只是写入用户目录下的 `.codex\skills`；只要你的 AI 工具支持扫描 `.codex\skills`，就可以加载这个 skill。
 
 真正执行 Git 流程的脚本仍然留在当前项目里：
 
@@ -92,45 +60,50 @@ powershell -NoProfile -ExecutionPolicy Bypass -File .\install.ps1
 
 安装时会自动把 Skill 里的脚本路径替换成你本机的真实 clone 路径，所以这个项目可以放在任意目录。
 
+## 发布新版本
+
+以后发新版本时，不需要手写固定版本安装器。
+
+例如要发布 `v0.1.2`：
+
+```powershell
+git tag v0.1.2
+git push origin v0.1.2
+powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\generate-release-installer.ps1 v0.1.2
+```
+
+脚本会生成：
+
+```text
+release-installers\demand-submit-install-v0.1.2.bat
+```
+
+把这个 bat 上传到 `v0.1.2` 的 Release 附件里即可。用户双击这个安装器时，会安装 `v0.1.2` 对应的项目代码，而不是安装 `main` 最新代码。
+
+仓库里的 `demand-submit-current-install.bat` 只用于安装当前最新版，不建议作为固定版本 Release 附件使用。
+
 ## 卸载
 
-推荐使用 Release 里下载的卸载入口，或 clone 项目根目录里的同名文件：
+如果不再使用，打开安装时选择的项目目录，在 `demand-submit-skill` 根目录里双击：
 
 ```text
 demand-submit-uninstall.bat
 ```
 
-双击后会用中文提示你是否删除 clone 下来的项目目录、是否删除脚本自动生成的提交保护记录。
+卸载脚本不会再反复询问，会直接删除：
 
-安装时也会在已安装的 skill 目录里复制一份备用卸载入口：
+- `%USERPROFILE%\.codex\skills\demand-submit`
+- clone 下来的 `demand-submit-skill` 项目目录
+- 项目目录里的 `demand-submit-logs`
+- 旧版本遗留在 `%USERPROFILE%\.codex` 下的提交保护记录
+
+如果只想清理日志，不卸载工具，可以在 `demand-submit-skill` 根目录里双击：
 
 ```text
-%USERPROFILE%\.codex\skills\demand-submit\demand-submit-uninstall.bat
+demand-submit-clear-logs.bat
 ```
 
-它会调用 clone 项目里的 `uninstall.ps1`，删除已安装的 skill。卸载时会询问是否同时删除 clone 下来的项目目录，默认会删除；脚本自动生成的提交保护记录会单独询问，默认不删除。
-
-也可以手动用完整路径执行卸载脚本：
-
-```powershell
-powershell -NoProfile -ExecutionPolicy Bypass -File "<clone-path>\uninstall.ps1"
-```
-
-默认只删除安装到 Codex 目录里的 skill，不会删除你 clone 下来的 `demand-submit-skill` 项目。
-
-如果想连 clone 下来的项目目录一起删除，加 `-RemoveProject`：
-
-```powershell
-powershell -NoProfile -ExecutionPolicy Bypass -File "<clone-path>\uninstall.ps1" -RemoveProject
-```
-
-如果也想删除脚本自动生成的提交保护记录，可以加 `-RemoveBackups`：
-
-```powershell
-powershell -NoProfile -ExecutionPolicy Bypass -File "<clone-path>\uninstall.ps1" -RemoveProject -RemoveBackups
-```
-
-如果编辑器或终端还打开在项目目录里，Windows 可能会暂时删不干净；关闭占用后重新执行即可。
+如果编辑器或终端还打开在项目目录里，Windows 可能会暂时删不干净；关闭占用后重新执行卸载即可。
 
 ## 在 Codex 中使用
 
@@ -232,7 +205,7 @@ powershell -NoProfile -ExecutionPolicy Bypass -File "<clone-path>\scripts\demand
 
 ## 脚本会做什么
 
-1. 在 `%USERPROFILE%\.codex\demand-submit-backups` 下备份当前状态和 patch。
+1. 在 `<clone-path>\demand-submit-logs` 下记录当前状态和 patch。
 2. stash 当前已跟踪和未跟踪的改动。
 3. 切到基础分支，默认是 `master`。
 4. 使用 `git pull --ff-only` 拉取最新 `origin/<baseBranch>`。
@@ -247,7 +220,27 @@ powershell -NoProfile -ExecutionPolicy Bypass -File "<clone-path>\scripts\demand
    - `-StagedOnly` 模式只提交脚本运行前已经暂存的文件。
    - 如果脚本发现同时存在 `Staged` 和 `Unstaged / Untracked`，但命令里没有显式传 `-StagedOnly` 或 `-All`，它会停止，防止 AI 误提交全部文件。
 
-## 冲突和拉取失败时怎么办
+## 日志、冲突和拉取失败时怎么办
+
+脚本每次执行前会把当前仓库状态写入：
+
+```text
+<clone-path>\demand-submit-logs
+```
+
+里面通常包含：
+
+```text
+branch.txt
+status.txt
+working-tree.patch
+staged.patch
+staged-files.txt
+```
+
+如果提交失败、冲突没处理好，或者你不确定脚本执行到哪一步，可以把对应日志目录路径复制给 AI，让 AI 根据这些文件分析失败原因和恢复方式。
+
+`demand-submit-logs` 已经加入 `.gitignore`，不会被提交到这个工具仓库。如果日志太多，可以双击 `demand-submit-clear-logs.bat` 手动清理。
 
 如果 `stash pop` 或恢复改动时发生冲突，脚本会停止并保留冲突现场。此时不要直接提交或推送，应该让 AI 或 IDE 继续处理：
 
@@ -324,7 +317,7 @@ powershell -NoProfile -ExecutionPolicy Bypass -File "<clone-path>\scripts\demand
 - `-StagedOnly` 模式不会提交未暂存文件。
 - 如果同时存在已暂存和未暂存/未跟踪文件，AI 应该直接使用 `-StagedOnly`，不要反复询问；只有用户明确要求提交全部时才使用 `-All`。
 - 不会复用本地或远程旧需求分支，会从最新 `origin/<baseBranch>` 创建干净分支。
-- 执行前会生成 patch 备份。
+- 执行前会在项目目录生成日志和 patch，便于失败后分析。
 - 拉取基础分支时使用 `git pull --ff-only`，避免自动 merge。
 - 建议同一时间只让一个工具执行 Git 操作，避免 IDEA、Codex、CatPaw 同时切分支。
 

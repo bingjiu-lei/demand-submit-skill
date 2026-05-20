@@ -126,18 +126,19 @@ if ($hasMixedSelection -and -not $StagedOnly -and -not $All) {
 }
 
 $stamp = Get-Date -Format "yyyyMMdd-HHmmss"
-$backupRoot = Join-Path $env:USERPROFILE ".codex\demand-submit-backups"
+$toolRoot = Split-Path -Parent (Split-Path -Parent $MyInvocation.MyCommand.Path)
+$backupRoot = Join-Path $toolRoot "demand-submit-logs"
 $backupDir = Join-Path $backupRoot "$stamp-$($targetBranch -replace '[\\/:*?""<>|]', '_')"
 $stagedPathFile = Join-Path $backupDir "staged-files.txt"
 New-Item -ItemType Directory -Force -Path $backupDir | Out-Null
 
-Write-Section "Backup"
+Write-Section "Log"
 Git-Output @("branch", "--show-current") | Set-Content -LiteralPath (Join-Path $backupDir "branch.txt") -Encoding UTF8
 Git-Output @("status", "--short") | Set-Content -LiteralPath (Join-Path $backupDir "status.txt") -Encoding UTF8
 Git-Output @("diff", "--binary") | Set-Content -LiteralPath (Join-Path $backupDir "working-tree.patch") -Encoding UTF8
 Git-Output @("diff", "--cached", "--binary") | Set-Content -LiteralPath (Join-Path $backupDir "staged.patch") -Encoding UTF8
 $originalStaged | Set-Content -LiteralPath $stagedPathFile -Encoding UTF8
-Write-Host "Backup written to: $backupDir"
+Write-Host "Log written to: $backupDir"
 
 $statusBefore = @(Git-Output @("status", "--porcelain"))
 $createdStash = $false
@@ -231,7 +232,7 @@ try {
     Write-Host "demand-submit stopped: $($_.Exception.Message)"
     if ($createdStash) {
         Write-Host "If your work was not restored, check: git stash list"
-        Write-Host "Backup directory: $backupDir"
+        Write-Host "Log directory: $backupDir"
     }
     exit 1
 }
