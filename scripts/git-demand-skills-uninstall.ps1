@@ -26,6 +26,7 @@ Write-Host ""
 
 Start-Sleep -Seconds 2
 
+$RepoRoot = $RepoRoot.Trim().Trim('"')
 $resolvedRepoRoot = (Resolve-Path -LiteralPath $RepoRoot).Path.TrimEnd("\")
 $codexHome = Join-Path $env:USERPROFILE ".codex"
 

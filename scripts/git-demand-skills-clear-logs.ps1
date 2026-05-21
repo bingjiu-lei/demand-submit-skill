@@ -6,6 +6,7 @@ param(
 $ErrorActionPreference = "Stop"
 [Console]::OutputEncoding = [System.Text.Encoding]::UTF8
 
+$RepoRoot = $RepoRoot.Trim().Trim('"')
 $resolvedRepoRoot = (Resolve-Path -LiteralPath $RepoRoot).Path.TrimEnd("\")
 $paths = @(
     (Join-Path $resolvedRepoRoot "demand-skill-logs"),

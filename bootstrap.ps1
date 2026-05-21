@@ -90,6 +90,31 @@ function Clone-Or-Update {
     }
 }
 
+function Move-LegacyProjectIfNeeded {
+    param(
+        [string]$InstallRoot,
+        [string]$ProjectName
+    )
+
+    $targetPath = Join-Path $InstallRoot $ProjectName
+    $legacyPath = Join-Path $InstallRoot "demand-submit-skill"
+
+    if ((Test-Path -LiteralPath $targetPath) -or -not (Test-Path -LiteralPath $legacyPath)) {
+        return $targetPath
+    }
+
+    if (-not (Test-Path -LiteralPath (Join-Path $legacyPath ".git"))) {
+        return $targetPath
+    }
+
+    Write-Host "Found legacy project directory:"
+    Write-Host "  $legacyPath"
+    Write-Host "Renaming it to:"
+    Write-Host "  $targetPath"
+    Rename-Item -LiteralPath $legacyPath -NewName $ProjectName
+    return $targetPath
+}
+
 function Install-Skill {
     param(
         [Parameter(Mandatory = $true)]
@@ -157,7 +182,7 @@ try {
         $InstallRoot = Select-InstallRoot
     }
 
-    $targetPath = Join-Path $InstallRoot $ProjectName
+    $targetPath = Move-LegacyProjectIfNeeded -InstallRoot $InstallRoot -ProjectName $ProjectName
     Write-Host "Install root: $InstallRoot"
     Write-Host "Target path:  $targetPath"
     Write-Host "Install ref:  $Ref"

@@ -1,7 +1,7 @@
 @echo off
 setlocal
 
-set "REPO_ROOT=%~dp0"
+set "REPO_ROOT=%~dp0."
 set "SOURCE_PS=%REPO_ROOT%scripts\git-demand-skills-clear-logs.ps1"
 
 if not exist "%SOURCE_PS%" (

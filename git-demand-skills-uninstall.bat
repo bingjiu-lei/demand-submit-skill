@@ -1,7 +1,7 @@
 @echo off
 setlocal
 
-set "REPO_ROOT=%~dp0"
+set "REPO_ROOT=%~dp0."
 set "SOURCE_PS=%REPO_ROOT%scripts\git-demand-skills-uninstall.ps1"
 set "TEMP_PS=%TEMP%\git-demand-skills-uninstall-%RANDOM%-%RANDOM%.ps1"
 
