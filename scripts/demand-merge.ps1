@@ -276,7 +276,9 @@ try {
             Write-Host ""
             Write-Host "Log directory: $logDir"
             Write-Host "Ask AI to inspect conflicts, then run:"
-            Write-Host "  Only keep code that belongs to [$cleanDemandId]. Do not keep unrelated incoming lines from the same commit."
+            Write-Host "  Use commit-$hash.patch to check patch facts for each incoming conflict line."
+            Write-Host "  Keep an incoming line only when it is a '+' added line in that patch."
+            Write-Host "  Drop context lines that are not '+' additions, even if they appear on the incoming side."
             Write-Host "  git add -- <resolved-files>"
             Write-Host "  git commit -m `"$commitMessage`""
             if (-not $NoPush) {

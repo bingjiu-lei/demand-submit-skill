@@ -42,7 +42,7 @@ git status --short --branch
 5. If the user gives a date/time, pass it with `-After` or `-Before` to narrow matching commits.
 6. Run the script.
 7. If the script says the target branch already has `[demandId]`, stop. Do not create or push a local branch.
-8. If the script exits with conflict code `2`, inspect `git status`, conflicted files, the log directory, and original commit diffs. Resolve conflicts by understanding both target release code and source demand intent.
+8. If the script exits with conflict code `2`, inspect `git status`, conflicted files, the log directory, and original commit diffs. Resolve conflicts by checking patch facts first, then business meaning only when patch facts are not enough.
 9. After any conflict resolution, show the final staged diff summary and ask the user to confirm before committing or pushing.
 
 ## Commands
@@ -79,6 +79,8 @@ Cherry-pick works at commit level. A matching commit can still contain unrelated
 
 Do not automatically commit or push after resolving conflicts. Conflict resolution is high risk; first show the final diff and wait for the user to confirm.
 
+Use the fast patch-fact workflow first. Do not scan the whole project unless this workflow cannot decide.
+
 Use:
 
 ```powershell
@@ -99,13 +101,20 @@ conflict-files.txt
 
 Resolve by preserving the release branch's compatible structure and applying only the demand's intended behavior.
 
-For every incoming line, ask:
+For every incoming line in the conflict block, first check the current commit patch for the same file:
 
-- Does this line directly belong to `[demandId]` or the user's stated title?
-- Is this line already present in the target release branch?
-- Could this line be another person's demand that happened to be in the same commit?
+- If the line appears as a `+` added line in `commit-<hash>.patch`, it is eligible to keep.
+- If the line appears only as a context line with no `+`, do not keep it as a demand change.
+- If the line appears as a `-` removed line, do not keep it as an incoming added line.
+- If patch facts are still ambiguous, then use business meaning and ask whether it directly belongs to `[demandId]` or the user's stated title.
 
-If a line looks unrelated, do not keep it. For example, if the demand is about TNM validation but an incoming line adds an unrelated medical-record-apply config, leave that unrelated line out unless the user explicitly confirms it belongs to this demand.
+Before editing a conflict file, write a short keep/drop table for the conflicting incoming lines:
+
+```text
+line or key | patch status | decision | reason
+```
+
+If a line is only a patch context line, drop it from the cherry-pick result even if it appears in the incoming conflict side. For example, if `emr_tnm_total_required_other_diag_str` is a `+` line but `emr_diag_code_medical_record_apply` is only a context line, keep only `emr_tnm_total_required_other_diag_str`.
 
 Before committing, run and show the important result:
 
