@@ -118,6 +118,22 @@ function Get-MatchingCommits {
     return @(Git-Output $args | Where-Object { -not [string]::IsNullOrWhiteSpace($_) })
 }
 
+function Get-TargetDemandCommits {
+    param(
+        [string]$Demand,
+        [string]$TargetRef
+    )
+
+    return @(Git-Output @(
+        "log",
+        "--reverse",
+        "--fixed-strings",
+        "--grep=[$Demand]",
+        "--format=%H%x09%ci%x09%s",
+        $TargetRef
+    ) | Where-Object { -not [string]::IsNullOrWhiteSpace($_) })
+}
+
 function Infer-Title {
     param(
         [string]$Demand,
@@ -187,6 +203,16 @@ try {
     Run-Git @("rev-parse", "--verify", $sourceRef)
     Run-Git @("rev-parse", "--verify", $targetRef)
 
+    Write-Section "Check Target"
+    $targetDemandCommits = Get-TargetDemandCommits -Demand $cleanDemandId -TargetRef $targetRef
+    if ($targetDemandCommits.Count -gt 0) {
+        $targetDemandCommits | Set-Content -LiteralPath (Join-Path $logDir "target-already-has-demand.txt") -Encoding UTF8
+        Write-Host "$targetRef already contains commit message with [$cleanDemandId]:"
+        $targetDemandCommits | ForEach-Object { Write-Host "  $_" }
+        Write-Host "Skip creating and pushing merge branch."
+        exit 0
+    }
+
     Write-Section "Find Commits"
     $commitLines = Get-MatchingCommits -Demand $cleanDemandId -SourceRef $sourceRef -TargetRef $targetRef -AfterValue $After -BeforeValue $Before
     if ($commitLines.Count -eq 0) {
@@ -204,6 +230,10 @@ try {
         Write-Host "  $($parts[0])  $($parts[1])  $($parts[2])"
     }
     $commitLines | Set-Content -LiteralPath (Join-Path $logDir "matched-commits.txt") -Encoding UTF8
+    foreach ($hash in $commitHashes) {
+        Git-Output @("show", "--stat", "--oneline", "--decorate=short", $hash) | Set-Content -LiteralPath (Join-Path $logDir "commit-$hash-stat.txt") -Encoding UTF8
+        Git-Output @("show", "--patch", "--find-renames", "--find-copies", $hash) | Set-Content -LiteralPath (Join-Path $logDir "commit-$hash.patch") -Encoding UTF8
+    }
 
     $finalTitle = Infer-Title -Demand $cleanDemandId -ProvidedTitle $Title -CommitLines $commitLines
     if ([string]::IsNullOrWhiteSpace($finalTitle)) {
@@ -219,6 +249,7 @@ try {
     Write-Section "Cherry Pick"
     foreach ($hash in $commitHashes) {
         Write-Host "Applying: $hash"
+        $hash | Set-Content -LiteralPath (Join-Path $logDir "current-cherry-pick-commit.txt") -Encoding UTF8
         & git -c core.quotepath=false cherry-pick --no-commit $hash
         if ($LASTEXITCODE -ne 0) {
             Write-Host ""
@@ -231,6 +262,7 @@ try {
             Write-Host ""
             Write-Host "Log directory: $logDir"
             Write-Host "Ask AI to inspect conflicts, then run:"
+            Write-Host "  Only keep code that belongs to [$cleanDemandId]. Do not keep unrelated incoming lines from the same commit."
             Write-Host "  git add -- <resolved-files>"
             Write-Host "  git commit -m `"$commitMessage`""
             if (-not $NoPush) {

@@ -19,6 +19,8 @@ Commit message is always:
 [demandId] title
 ```
 
+When maintaining this git-demand-skills repository itself, use a Chinese commit message title and describe what this push changed or added.
+
 ## Fast Path
 
 Do this with minimal explanation. Do not write a long analysis before running commands.
