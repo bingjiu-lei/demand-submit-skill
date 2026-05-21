@@ -103,6 +103,7 @@ function Get-MatchingCommits {
     $args = @(
         "log",
         "--reverse",
+        "--no-merges",
         "--fixed-strings",
         "--grep=[$Demand]",
         "--format=%H%x09%ci%x09%s"
@@ -115,7 +116,13 @@ function Get-MatchingCommits {
     }
     $args += "$TargetRef..$SourceRef"
 
-    return @(Git-Output $args | Where-Object { -not [string]::IsNullOrWhiteSpace($_) })
+    return @(Git-Output $args | Where-Object {
+        if ([string]::IsNullOrWhiteSpace($_)) {
+            return $false
+        }
+        $subject = ($_ -split "`t", 3)[2]
+        return $subject.Trim().StartsWith("[$Demand]")
+    })
 }
 
 function Get-TargetDemandCommits {
@@ -127,11 +134,18 @@ function Get-TargetDemandCommits {
     return @(Git-Output @(
         "log",
         "--reverse",
+        "--no-merges",
         "--fixed-strings",
         "--grep=[$Demand]",
         "--format=%H%x09%ci%x09%s",
         $TargetRef
-    ) | Where-Object { -not [string]::IsNullOrWhiteSpace($_) })
+    ) | Where-Object {
+        if ([string]::IsNullOrWhiteSpace($_)) {
+            return $false
+        }
+        $subject = ($_ -split "`t", 3)[2]
+        return $subject.Trim().StartsWith("[$Demand]")
+    })
 }
 
 function Infer-Title {

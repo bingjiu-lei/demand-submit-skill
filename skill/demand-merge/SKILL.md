@@ -43,6 +43,7 @@ git status --short --branch
 6. Run the script.
 7. If the script says the target branch already has `[demandId]`, stop. Do not create or push a local branch.
 8. If the script exits with conflict code `2`, inspect `git status`, conflicted files, the log directory, and original commit diffs. Resolve conflicts by understanding both target release code and source demand intent.
+9. After any conflict resolution, show the final staged diff summary and ask the user to confirm before committing or pushing.
 
 ## Commands
 
@@ -76,6 +77,8 @@ When conflicts occur, do not choose ours/theirs blindly.
 
 Cherry-pick works at commit level. A matching commit can still contain unrelated lines from another person's work. Conflict resolution must keep only the code that belongs to this demand.
 
+Do not automatically commit or push after resolving conflicts. Conflict resolution is high risk; first show the final diff and wait for the user to confirm.
+
 Use:
 
 ```powershell
@@ -103,6 +106,15 @@ For every incoming line, ask:
 - Could this line be another person's demand that happened to be in the same commit?
 
 If a line looks unrelated, do not keep it. For example, if the demand is about TNM validation but an incoming line adds an unrelated medical-record-apply config, leave that unrelated line out unless the user explicitly confirms it belongs to this demand.
+
+Before committing, run and show the important result:
+
+```powershell
+git diff --cached --stat
+git diff --cached -- <resolved-file>
+```
+
+Then ask the user to confirm the final diff. Do not push until the user confirms.
 
 After conflicts are resolved:
 
@@ -145,3 +157,4 @@ Prefer a tool `workdir` parameter over changing directories in shell text.
 - If the target branch already has a commit message containing `[demandId]`, stop and do not push a new branch.
 - If the script stops on conflict, keep the conflict state for AI/manual resolution.
 - During conflict resolution, do not copy all incoming conflict lines by default; keep only demand-owned changes.
+- After resolving conflicts, do not commit or push until the user confirms the staged diff.
