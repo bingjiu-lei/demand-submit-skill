@@ -1,17 +1,19 @@
 ﻿param(
     [string]$InstallRoot = "",
-    [string]$ProjectName = "demand-submit-skill",
+    [string]$ProjectName = "git-demand-skills",
     [string]$Ref = "main"
 )
 
 $ErrorActionPreference = "Stop"
 [Console]::OutputEncoding = [System.Text.Encoding]::UTF8
 
-$giteeRepo = "https://gitee.com/bingjiu-lei/demand-submit-skill.git"
-$githubRepo = "https://github.com/bingjiu-lei/demand-submit-skill.git"
+$giteeRepo = "https://gitee.com/bingjiu-lei/git-demand-skills.git"
+$githubRepo = "https://github.com/bingjiu-lei/git-demand-skills.git"
+$legacyGiteeRepo = "https://gitee.com/bingjiu-lei/demand-submit-skill.git"
+$legacyGithubRepo = "https://github.com/bingjiu-lei/demand-submit-skill.git"
 
 function Show-Info {
-    param([string]$Message, [string]$Title = "demand-submit installer")
+    param([string]$Message, [string]$Title = "git-demand-skills installer")
     try {
         Add-Type -AssemblyName System.Windows.Forms -ErrorAction Stop
         [System.Windows.Forms.MessageBox]::Show($Message, $Title, "OK", "Information") | Out-Null
@@ -23,7 +25,7 @@ function Show-Info {
 function Select-InstallRoot {
     Add-Type -AssemblyName System.Windows.Forms
     $dialog = New-Object System.Windows.Forms.FolderBrowserDialog
-    $dialog.Description = "请选择 demand-submit-skill 保存到哪个目录"
+    $dialog.Description = "请选择 git-demand-skills 保存到哪个目录"
     $dialog.ShowNewFolderButton = $true
     $dialog.SelectedPath = [Environment]::GetFolderPath("UserProfile")
 
@@ -95,37 +97,57 @@ function Install-Skill {
         [string]$CodexHome = (Join-Path $env:USERPROFILE ".codex")
     )
 
-    $skillSource = Join-Path $ProjectPath "skill\demand-submit"
-    $scriptPath = Join-Path $ProjectPath "scripts\demand-submit.ps1"
-    $skillTarget = Join-Path $CodexHome "skills\demand-submit"
+    $submitSkillSource = Join-Path $ProjectPath "skill\demand-submit"
+    $submitScriptPath = Join-Path $ProjectPath "scripts\demand-submit.ps1"
+    $submitSkillTarget = Join-Path $CodexHome "skills\demand-submit"
+    $mergeSkillSource = Join-Path $ProjectPath "skill\demand-merge"
+    $mergeScriptPath = Join-Path $ProjectPath "scripts\demand-merge.ps1"
+    $mergeSkillTarget = Join-Path $CodexHome "skills\demand-merge"
     $oldSkillTarget = Join-Path $CodexHome "skills\demand-git"
 
-    if (-not (Test-Path -LiteralPath $scriptPath)) {
-        throw "Cannot find demand-submit script: $scriptPath"
+    if (-not (Test-Path -LiteralPath $submitScriptPath)) {
+        throw "Cannot find demand-submit script: $submitScriptPath"
     }
-    if (-not (Test-Path -LiteralPath $skillSource)) {
-        throw "Cannot find demand-submit skill directory: $skillSource"
+    if (-not (Test-Path -LiteralPath $submitSkillSource)) {
+        throw "Cannot find demand-submit skill directory: $submitSkillSource"
+    }
+    if (-not (Test-Path -LiteralPath $mergeScriptPath)) {
+        throw "Cannot find demand-merge script: $mergeScriptPath"
+    }
+    if (-not (Test-Path -LiteralPath $mergeSkillSource)) {
+        throw "Cannot find demand-merge skill directory: $mergeSkillSource"
     }
 
-    New-Item -ItemType Directory -Force -Path (Split-Path -Parent $skillTarget) | Out-Null
+    New-Item -ItemType Directory -Force -Path (Split-Path -Parent $submitSkillTarget) | Out-Null
 
-    if (Test-Path -LiteralPath $skillTarget) {
-        Remove-Item -LiteralPath $skillTarget -Recurse -Force
+    if (Test-Path -LiteralPath $submitSkillTarget) {
+        Remove-Item -LiteralPath $submitSkillTarget -Recurse -Force
+    }
+    if (Test-Path -LiteralPath $mergeSkillTarget) {
+        Remove-Item -LiteralPath $mergeSkillTarget -Recurse -Force
     }
     if (Test-Path -LiteralPath $oldSkillTarget) {
         Remove-Item -LiteralPath $oldSkillTarget -Recurse -Force
     }
 
-    Copy-Item -LiteralPath $skillSource -Destination $skillTarget -Recurse -Force
+    Copy-Item -LiteralPath $submitSkillSource -Destination $submitSkillTarget -Recurse -Force
+    Copy-Item -LiteralPath $mergeSkillSource -Destination $mergeSkillTarget -Recurse -Force
 
-    $installedSkill = Join-Path $skillTarget "SKILL.md"
-    $content = Get-Content -Raw -LiteralPath $installedSkill
-    $content = $content.Replace("{{DEMAND_SUBMIT_SCRIPT_PATH}}", $scriptPath)
-    Set-Content -LiteralPath $installedSkill -Value $content -Encoding UTF8
+    $installedSubmitSkill = Join-Path $submitSkillTarget "SKILL.md"
+    $submitContent = Get-Content -Raw -LiteralPath $installedSubmitSkill
+    $submitContent = $submitContent.Replace("{{DEMAND_SUBMIT_SCRIPT_PATH}}", $submitScriptPath)
+    Set-Content -LiteralPath $installedSubmitSkill -Value $submitContent -Encoding UTF8
 
-    Write-Host "Installed demand-submit skill to: $skillTarget"
-    Write-Host "Configured script path:"
-    Write-Host "  $scriptPath"
+    $installedMergeSkill = Join-Path $mergeSkillTarget "SKILL.md"
+    $mergeContent = Get-Content -Raw -LiteralPath $installedMergeSkill
+    $mergeContent = $mergeContent.Replace("{{DEMAND_MERGE_SCRIPT_PATH}}", $mergeScriptPath)
+    Set-Content -LiteralPath $installedMergeSkill -Value $mergeContent -Encoding UTF8
+
+    Write-Host "Installed demand-submit skill to: $submitSkillTarget"
+    Write-Host "Installed demand-merge skill to:  $mergeSkillTarget"
+    Write-Host "Configured script paths:"
+    Write-Host "  $submitScriptPath"
+    Write-Host "  $mergeScriptPath"
 }
 
 try {
@@ -145,15 +167,27 @@ try {
         Clone-Or-Update -RepoUrl $giteeRepo -TargetPath $targetPath -CheckoutRef $Ref
     } catch {
         Write-Host "Gitee failed: $($_.Exception.Message)"
-        Write-Host "Trying GitHub: $githubRepo"
-        Clone-Or-Update -RepoUrl $githubRepo -TargetPath $targetPath -CheckoutRef $Ref
+        try {
+            Write-Host "Trying GitHub: $githubRepo"
+            Clone-Or-Update -RepoUrl $githubRepo -TargetPath $targetPath -CheckoutRef $Ref
+        } catch {
+            Write-Host "GitHub failed: $($_.Exception.Message)"
+            try {
+                Write-Host "Trying legacy Gitee: $legacyGiteeRepo"
+                Clone-Or-Update -RepoUrl $legacyGiteeRepo -TargetPath $targetPath -CheckoutRef $Ref
+            } catch {
+                Write-Host "Legacy Gitee failed: $($_.Exception.Message)"
+                Write-Host "Trying legacy GitHub: $legacyGithubRepo"
+                Clone-Or-Update -RepoUrl $legacyGithubRepo -TargetPath $targetPath -CheckoutRef $Ref
+            }
+        }
     }
 
     Install-Skill -ProjectPath $targetPath
 
-    Show-Info "demand-submit skill 安装完成。`n项目目录：$targetPath"
+    Show-Info "git-demand-skills 安装完成。`n已安装：demand-submit / demand-merge`n项目目录：$targetPath"
 } catch {
-    Show-Info "安装失败：$($_.Exception.Message)" "demand-submit installer failed"
+    Show-Info "安装失败：$($_.Exception.Message)" "git-demand-skills installer failed"
     exit 1
 }
 

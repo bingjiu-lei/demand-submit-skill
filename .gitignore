@@ -4,4 +4,5 @@
 *.tmp
 *.bak
 demand-submit-logs/
+demand-skill-logs/
 release-installers/

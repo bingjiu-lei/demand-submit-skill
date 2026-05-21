@@ -127,7 +127,7 @@ if ($hasMixedSelection -and -not $StagedOnly -and -not $All) {
 
 $stamp = Get-Date -Format "yyyyMMdd-HHmmss"
 $toolRoot = Split-Path -Parent (Split-Path -Parent $MyInvocation.MyCommand.Path)
-$backupRoot = Join-Path $toolRoot "demand-submit-logs"
+$backupRoot = Join-Path $toolRoot "demand-skill-logs"
 $backupDir = Join-Path $backupRoot "$stamp-$($targetBranch -replace '[\\/:*?""<>|]', '_')"
 $stagedPathFile = Join-Path $backupDir "staged-files.txt"
 New-Item -ItemType Directory -Force -Path $backupDir | Out-Null
