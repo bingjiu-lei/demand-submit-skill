@@ -94,7 +94,7 @@ release-installers\git-demand-skills-install-v0.2.0.bat
 如果不再使用，打开安装时选择的项目目录，在 `git-demand-skills` 根目录里双击：
 
 ```text
-demand-submit-uninstall.bat
+git-demand-skills-uninstall.bat
 ```
 
 卸载脚本不会再反复询问，会直接删除：
@@ -108,7 +108,7 @@ demand-submit-uninstall.bat
 如果只想清理日志，不卸载工具，可以在 `git-demand-skills` 根目录里双击：
 
 ```text
-demand-submit-clear-logs.bat
+git-demand-skills-clear-logs.bat
 ```
 
 如果编辑器或终端还打开在项目目录里，Windows 可能会暂时删不干净；关闭占用后重新执行卸载即可。
@@ -313,7 +313,7 @@ staged-files.txt
 
 如果提交失败、冲突没处理好，或者你不确定脚本执行到哪一步，可以把对应日志目录路径复制给 AI，让 AI 根据这些文件分析失败原因和恢复方式。
 
-`demand-skill-logs` 已经加入 `.gitignore`，不会被提交到这个工具仓库。如果日志太多，可以双击 `demand-submit-clear-logs.bat` 手动清理。
+`demand-skill-logs` 已经加入 `.gitignore`，不会被提交到这个工具仓库。如果日志太多，可以双击 `git-demand-skills-clear-logs.bat` 手动清理。
 
 如果 `stash pop` 或恢复改动时发生冲突，脚本会停止并保留冲突现场。此时不要直接提交或推送，应该让 AI 或 IDE 继续处理：
 

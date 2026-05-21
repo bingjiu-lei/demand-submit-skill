@@ -11,7 +11,7 @@ Run the standalone script:
 powershell -NoProfile -ExecutionPolicy Bypass -File "{{DEMAND_SUBMIT_SCRIPT_PATH}}" <demandId> "<title>" <mode>
 ```
 
-Uninstall from the cloned project root with `demand-submit-uninstall.bat`. Clear only logs with `demand-submit-clear-logs.bat`.
+Uninstall from the cloned project root with `git-demand-skills-uninstall.bat`. Clear only logs with `git-demand-skills-clear-logs.bat`.
 
 Commit message is always:
 

@@ -3,7 +3,7 @@ chcp 65001 >nul
 setlocal
 
 set "DEMAND_SUBMIT_REPO_ROOT=%~dp0"
-set "UNINSTALL_PS=%TEMP%\demand-submit-uninstall-%RANDOM%-%RANDOM%.ps1"
+set "UNINSTALL_PS=%TEMP%\git-demand-skills-uninstall-%RANDOM%-%RANDOM%.ps1"
 
 echo git-demand-skills 卸载器
 echo.
