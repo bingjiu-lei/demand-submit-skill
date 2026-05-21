@@ -231,6 +231,8 @@ powershell -NoProfile -ExecutionPolicy Bypass -File "<clone-path>\scripts\demand
 电子病历前端 2063657 合并到 11 分支
 ```
 
+这种写法里，“电子病历前端”只是项目/模块提示，不是提交标题。脚本会从 `master` 上匹配到的 `[2063657]` commit message 自动推断真实标题。
+
 如果同一个需求号在 `master` 上有多次提交，并且提交名很像，可以补充时间：
 
 ```text
@@ -240,14 +242,16 @@ powershell -NoProfile -ExecutionPolicy Bypass -File "<clone-path>\scripts\demand
 直接执行脚本：
 
 ```powershell
-powershell -NoProfile -ExecutionPolicy Bypass -File "<clone-path>\scripts\demand-merge.ps1" 2063657 "AI病历智能辅写AI按钮逻辑调整" -TargetBranch 11
+powershell -NoProfile -ExecutionPolicy Bypass -File "<clone-path>\scripts\demand-merge.ps1" 2063657 -TargetBranch 11
 ```
 
 只本地执行、不推送：
 
 ```powershell
-powershell -NoProfile -ExecutionPolicy Bypass -File "<clone-path>\scripts\demand-merge.ps1" 2063657 "AI病历智能辅写AI按钮逻辑调整" -TargetBranch 11 -NoPush
+powershell -NoProfile -ExecutionPolicy Bypass -File "<clone-path>\scripts\demand-merge.ps1" 2063657 -TargetBranch 11 -NoPush
 ```
+
+如果用户明确给了真实需求标题，才把标题作为第二个参数传入。
 
 它会做这些事：
 

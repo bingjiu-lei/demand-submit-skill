@@ -167,6 +167,45 @@ function Infer-Title {
     return ($firstSubject -replace "^\[$([regex]::Escape($Demand))\]\s*", "").Trim()
 }
 
+function Test-ProjectHintTitle {
+    param([string]$Value)
+
+    if ([string]::IsNullOrWhiteSpace($Value)) {
+        return $false
+    }
+
+    $text = $Value.Trim()
+    $frontEnd = "$([char]0x524D)$([char]0x7AEF)"
+    $backEnd = "$([char]0x540E)$([char]0x7AEF)"
+    $doctor = "$([char]0x533B)$([char]0x751F)"
+    $nurse = "$([char]0x62A4)$([char]0x58EB)"
+    $medicalRecord = "$([char]0x75C5)$([char]0x5386)"
+    $electronicMedicalRecord = "$([char]0x7535)$([char]0x5B50)$([char]0x75C5)$([char]0x5386)"
+    $service = "$([char]0x670D)$([char]0x52A1)"
+    $module = "$([char]0x6A21)$([char]0x5757)"
+    $newArch = "$([char]0x65B0)$([char]0x67B6)$([char]0x6784)"
+    $oldArch = "$([char]0x65E7)$([char]0x67B6)$([char]0x6784)"
+    $newWord = "$([char]0x65B0)"
+    $oldWord = "$([char]0x65E7)"
+
+    if ($text -match '[,;:]') {
+        return $false
+    }
+    if ($text.EndsWith($frontEnd) -or $text.EndsWith($backEnd) -or $text.EndsWith($service) -or $text.EndsWith($module)) {
+        return $true
+    }
+    if ($text.Contains("fjfy") -or $text.Contains("onelink") -or $text.Contains("common")) {
+        return $true
+    }
+    $projectWords = @($doctor, $nurse, $medicalRecord, $electronicMedicalRecord, $newArch, $oldArch)
+    foreach ($word in $projectWords) {
+        if ($text.StartsWith($word) -or $text.StartsWith("$newWord$word") -or $text.StartsWith("$oldWord$word")) {
+            return $true
+        }
+    }
+    return $false
+}
+
 $repoRoot = (Git-Output @("rev-parse", "--show-toplevel") | Select-Object -First 1)
 Set-Location -LiteralPath $repoRoot
 
@@ -249,7 +288,14 @@ try {
         Git-Output @("show", "--patch", "--find-renames", "--find-copies", $hash) | Set-Content -LiteralPath (Join-Path $logDir "commit-$hash.patch") -Encoding UTF8
     }
 
-    $finalTitle = Infer-Title -Demand $cleanDemandId -ProvidedTitle $Title -CommitLines $commitLines
+    $titleForCommit = $Title
+    if (Test-ProjectHintTitle -Value $titleForCommit) {
+        Write-Host "Provided title looks like a project/module hint, not a demand title: $titleForCommit"
+        Write-Host "Ignoring it and inferring title from matched commit message."
+        $titleForCommit = ""
+    }
+
+    $finalTitle = Infer-Title -Demand $cleanDemandId -ProvidedTitle $titleForCommit -CommitLines $commitLines
     if ([string]::IsNullOrWhiteSpace($finalTitle)) {
         throw "Cannot infer commit title. Pass a title explicitly."
     }

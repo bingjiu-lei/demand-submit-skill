@@ -12,7 +12,7 @@ This skill is named merge for the business workflow, but the Git operation is ch
 Run the standalone script:
 
 ```powershell
-powershell -NoProfile -ExecutionPolicy Bypass -File "{{DEMAND_MERGE_SCRIPT_PATH}}" <demandId> "<title>" -TargetBranch release-1.11
+powershell -NoProfile -ExecutionPolicy Bypass -File "{{DEMAND_MERGE_SCRIPT_PATH}}" <demandId> -TargetBranch release-1.11
 ```
 
 Commit message is always:
@@ -20,6 +20,10 @@ Commit message is always:
 ```text
 [demandId] title
 ```
+
+If the user does not explicitly provide a demand title, do not invent one. Omit the title argument and let the script infer it from the matched source commit message.
+
+Project/module words such as `fjfy病历前端`, `电子病历前端`, `医生后端`, or `新医生前端` are repository hints only. They are not demand titles and must not be passed as the title argument.
 
 When maintaining this git-demand-skills repository itself, use a Chinese commit message title and describe what this push changed or added.
 
@@ -39,8 +43,12 @@ git status --short --branch
    - source branch defaults to `master`.
    - if the user says `11`, use `release-1.11`.
    - target work branch defaults to `<demandId>-11`.
-5. If the user gives a date/time, pass it with `-After` or `-Before` to narrow matching commits.
-6. Run the script.
+5. Infer title:
+   - If the user explicitly says `标题...` or provides a real demand title, pass it as the second argument.
+   - If the user only gives project/module + demand id + target branch, omit the title argument.
+   - Never use project/module words as the title.
+6. If the user gives a date/time, pass it with `-After` or `-Before` to narrow matching commits.
+7. Run the script.
 7. If the script says the target branch already has `[demandId]`, stop. Do not create or push a local branch.
 8. If the script exits with conflict code `2`, inspect `git status`, conflicted files, the log directory, and original commit diffs. Resolve conflicts by checking patch facts first, then business meaning only when patch facts are not enough.
 9. After any conflict resolution, show the final staged diff summary and ask the user to confirm before committing or pushing.
@@ -50,25 +58,31 @@ git status --short --branch
 Merge one demand from `master` to `release-1.11`:
 
 ```powershell
-powershell -NoProfile -ExecutionPolicy Bypass -File "{{DEMAND_MERGE_SCRIPT_PATH}}" 2063657 "demand title" -TargetBranch release-1.11
+powershell -NoProfile -ExecutionPolicy Bypass -File "{{DEMAND_MERGE_SCRIPT_PATH}}" 2063657 -TargetBranch release-1.11
 ```
 
 User says `11`:
 
 ```powershell
-powershell -NoProfile -ExecutionPolicy Bypass -File "{{DEMAND_MERGE_SCRIPT_PATH}}" 2063657 "demand title" -TargetBranch 11
+powershell -NoProfile -ExecutionPolicy Bypass -File "{{DEMAND_MERGE_SCRIPT_PATH}}" 2063657 -TargetBranch 11
 ```
 
 Narrow by time when the same demand id has many commits:
 
 ```powershell
-powershell -NoProfile -ExecutionPolicy Bypass -File "{{DEMAND_MERGE_SCRIPT_PATH}}" 2063657 "demand title" -TargetBranch 11 -After "2026-05-21 10:30"
+powershell -NoProfile -ExecutionPolicy Bypass -File "{{DEMAND_MERGE_SCRIPT_PATH}}" 2063657 -TargetBranch 11 -After "2026-05-21 10:30"
 ```
 
 Only prepare locally, do not push:
 
 ```powershell
-powershell -NoProfile -ExecutionPolicy Bypass -File "{{DEMAND_MERGE_SCRIPT_PATH}}" 2063657 "demand title" -TargetBranch 11 -NoPush
+powershell -NoProfile -ExecutionPolicy Bypass -File "{{DEMAND_MERGE_SCRIPT_PATH}}" 2063657 -TargetBranch 11 -NoPush
+```
+
+Explicit title only when the user provides the real demand title:
+
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File "{{DEMAND_MERGE_SCRIPT_PATH}}" 199610 "【茶亭】Z51等主诊断时，其他诊断必须包含C开头的诊断" -TargetBranch 11
 ```
 
 ## Conflict Handling
