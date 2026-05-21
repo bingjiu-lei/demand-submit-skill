@@ -1,8 +1,9 @@
 @echo off
 setlocal
 
+set "REPO_DIR=%~dp0"
 set "REPO_ROOT=%~dp0."
-set "SOURCE_PS=%REPO_ROOT%scripts\git-demand-skills-clear-logs.ps1"
+set "SOURCE_PS=%REPO_DIR%scripts\git-demand-skills-clear-logs.ps1"
 
 if not exist "%SOURCE_PS%" (
   echo Cannot find log cleanup script:
