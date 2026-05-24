@@ -1,3 +1,4 @@
-display_name: Demand Submit
-short_description: Submit current changes to a demand branch safely.
-default_prompt: Use demand-submit to move my current changes onto a demand branch based on the latest base branch, commit with the demand title, and push. Stop if there are conflicts.
+interface:
+  display_name: "Demand Submit"
+  short_description: "Submit current changes to a demand branch safely."
+  default_prompt: "Use $demand-submit to move my current changes onto a demand branch based on the latest base branch, commit with the demand title, and push. Stop if there are conflicts."

@@ -1,0 +1,4 @@
+interface:
+  display_name: "Demand Merge"
+  short_description: "Cherry-pick one demand from master to a release branch."
+  default_prompt: "Use $demand-merge to cherry-pick one GitLab demand from master onto the target release branch, stopping for conflict review."

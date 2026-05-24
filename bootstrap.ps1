@@ -158,15 +158,17 @@ function Install-Skill {
     Copy-Item -LiteralPath $submitSkillSource -Destination $submitSkillTarget -Recurse -Force
     Copy-Item -LiteralPath $mergeSkillSource -Destination $mergeSkillTarget -Recurse -Force
 
+    $utf8NoBom = New-Object System.Text.UTF8Encoding($false)
+
     $installedSubmitSkill = Join-Path $submitSkillTarget "SKILL.md"
     $submitContent = Get-Content -Raw -LiteralPath $installedSubmitSkill
     $submitContent = $submitContent.Replace("{{DEMAND_SUBMIT_SCRIPT_PATH}}", $submitScriptPath)
-    Set-Content -LiteralPath $installedSubmitSkill -Value $submitContent -Encoding UTF8
+    [System.IO.File]::WriteAllText($installedSubmitSkill, $submitContent, $utf8NoBom)
 
     $installedMergeSkill = Join-Path $mergeSkillTarget "SKILL.md"
     $mergeContent = Get-Content -Raw -LiteralPath $installedMergeSkill
     $mergeContent = $mergeContent.Replace("{{DEMAND_MERGE_SCRIPT_PATH}}", $mergeScriptPath)
-    Set-Content -LiteralPath $installedMergeSkill -Value $mergeContent -Encoding UTF8
+    [System.IO.File]::WriteAllText($installedMergeSkill, $mergeContent, $utf8NoBom)
 
     Write-Host "Installed demand-submit skill to: $submitSkillTarget"
     Write-Host "Installed demand-merge skill to:  $mergeSkillTarget"
