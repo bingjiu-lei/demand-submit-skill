@@ -20,6 +20,7 @@ if errorlevel 1 (
   exit /b 1
 )
 
+cd /d "%TEMP%"
 start "git-demand-skills uninstall" /D "%TEMP%" powershell -NoProfile -ExecutionPolicy Bypass -File "%TEMP_PS%" -RepoRoot "%REPO_ROOT%"
 
 echo Uninstall task started. Check the new PowerShell window for details.
